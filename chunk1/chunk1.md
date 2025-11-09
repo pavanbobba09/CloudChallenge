@@ -61,7 +61,7 @@ Basically — **the domain was pointing to the wrong hosted zone.**
 
 Here’s the setup I used for this project:
 
-![Architecture Diagram](./assets/architecture.png)
+![Architecture Diagram](./assests/architecture.png)
 
 **Explanation:**
 - **Route 53** manages the domain `pavan-cloud.com`
