@@ -1,8 +1,9 @@
-# Cloud Resume Challenge – Debug Notes
+# 🌩️ Cloud Resume Challenge – Debug Notes (Chunk 1)
 
-## What I Learned
+## 🧠 What I Learned
 
-So I was trying to host my Cloud Resume website on AWS using **S3 + CloudFront + Route 53**, and at first everything looked perfect… but when I opened `https://pavan-cloud.com`, it kept showing:
+I was trying to host my **Cloud Resume Challenge** website on AWS using **S3 + CloudFront + Route 53**.  
+At first, everything looked fine, but when I opened my site `https://pavan-cloud.com`, I got this error:
 
 ```
 This site can’t be reached  
@@ -10,15 +11,15 @@ pavan-cloud.com’s DNS address could not be found.
 DNS_PROBE_POSSIBLE
 ```
 
-At first, I thought it was something wrong with **CloudFront**, but later I found out the real issue was with **Route 53 and the nameservers**.
+Initially, I thought the issue was with **CloudFront**, but after some digging, I realized the real problem was with **Route 53 and the nameserver mismatch**.
 
 ---
 
-## The Real Issue
+## 🧩 The Real Issue
 
-Basically, I had **two different sets of name servers**:
+I had **two different sets of name servers**, which caused my domain to point to the wrong hosted zone.
 
-- In the **registered domain** section (under Route 53 → Registered Domains), my nameservers were:
+- **Registered Domain (under Route 53 → Registered Domains):**
   ```
   ns-1088.awsdns-08.org
   ns-557.awsdns-05.net
@@ -26,7 +27,7 @@ Basically, I had **two different sets of name servers**:
   ns-88.awsdns-11.com
   ```
 
-- But in the **hosted zone**, the nameservers were completely different:
+- **Hosted Zone (under Route 53 → Hosted Zones):**
   ```
   ns-707.awsdns-24.net
   ns-1213.awsdns-23.org
@@ -34,59 +35,73 @@ Basically, I had **two different sets of name servers**:
   ns-1670.awsdns-16.co.uk
   ```
 
-Because these didn’t match, my domain didn’t know which DNS zone to use, and that’s why it couldn’t resolve to my CloudFront distribution.  
-Basically, the domain was pointing to the wrong zone.
+Since these didn’t match, my domain couldn’t find the correct DNS zone, which is why it failed to resolve to my CloudFront distribution.
+
+Basically — **the domain was pointing to the wrong hosted zone.**
 
 ---
 
-## How I Fixed It
+## 🔧 How I Fixed It
 
-1. Went to **Route 53 → Registered Domains → pavan-cloud.com**  
-2. Edited the **Name Servers** and replaced them with the exact 4 from the hosted zone:  
+1. Went to **Route 53 → Registered Domains → pavan-cloud.com**
+2. Edited the **Name Servers** and replaced them with the ones from my **Hosted Zone**:
    ```
    ns-707.awsdns-24.net
    ns-1213.awsdns-23.org
    ns-305.awsdns-38.com
    ns-1670.awsdns-16.co.uk
    ```
-3. Waited for around **30–60 minutes** for DNS propagation.
+3. Waited around **30–60 minutes** for DNS propagation to complete.
 4. Checked propagation using [dnschecker.org](https://dnschecker.org).
-5. Once it started resolving, my domain loaded perfectly from CloudFront 🎉
+5. Once it started resolving to my CloudFront distribution (`d1tb64qqhejxg3.cloudfront.net`), the site loaded successfully 🎉.
 
 ---
 
-## My Key Takeaways
+## 🏗️ Architecture Diagram
 
-- If the site says “DNS_PROBE_POSSIBLE,” always check if **your domain’s nameservers match your Route 53 hosted zone nameservers**.
-- Don’t touch the **SOA record** — AWS manages that automatically.
-- Always keep the **S3 bucket private** and let CloudFront fetch data via **Origin Access Control (OAC)**.
-- Set your **default root object** in CloudFront to `index.html` so the homepage loads directly.
-- Be patient — DNS changes can take up to **24 hours**, but usually work within an hour.
+Here’s the setup I used for this project:
 
----
+![Architecture Diagram](./assets/architecture.png)
 
-## Final Setup
-
-✅ **Architecture**
-
-- **S3 bucket** → stores the static site (private)  
-- **CloudFront** → CDN distribution with HTTPS (TLSv1.2_2021)  
-- **Route 53** → DNS routing with A/AAAA alias records pointing to CloudFront  
-- **ACM Certificate** → issued in `us-east-1` for `pavan-cloud.com`
-
-Everything is now working smoothly 🚀
+**Explanation:**
+- **Route 53** manages the domain `pavan-cloud.com`
+- **CloudFront (CDN)** distributes and caches content globally with HTTPS
+- **S3 Bucket** securely stores all static frontend files
+- CloudFront fetches data from S3 through **Origin Access Control (OAC)**
 
 ---
 
-### Quick Note
-If you ever face the same issue again, first step → check **nameserver mismatch** between Hosted Zone and Registered Domain.
+## 💡 Key Takeaways
 
+- If you see `DNS_PROBE_POSSIBLE`, first check if your **domain’s nameservers** and **Route 53 hosted zone nameservers** match.
+- Never edit the **SOA record** — AWS manages that automatically.
+- Keep your **S3 bucket private** and let CloudFront handle delivery.
+- Always set your **Default Root Object** in CloudFront to `index.html`.
+- Be patient — DNS changes can take **30 minutes to a few hours** to fully propagate.
+
+---
+
+## ✅ Final Setup Recap
+
+| AWS Service | Purpose |
+|--------------|----------|
+| **S3 Bucket** | Stores static frontend files (private) |
+| **CloudFront (CDN)** | Distributes website globally & provides HTTPS |
+| **Route 53** | Manages DNS records and domain routing |
+| **ACM Certificate** | Provides SSL/TLS security (`us-east-1` region) |
+
+Everything is working smoothly now 🚀
+
+---
+
+### 🧾 Quick Note
+If you ever run into a similar issue again, first thing to check:
 ```
-# Always match these values!
+# Always make sure
 Hosted Zone NS = Registered Domain NS
 ```
 
 ---
 
-Author: Sai Pavan Tej Bobba  
-Project: AWS Cloud Resume Challenge
+**Author:** Sai Pavan Tej Bobba  
+**Project:** AWS Cloud Resume Challenge (Chunk 1 – Route 53 & DNS Fix)
