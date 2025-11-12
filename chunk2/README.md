@@ -33,9 +33,9 @@ Public URL increments the counter every time it’s accessed.
 
 ## Architecture
 Add your architecture diagram here:
-```
+
 ![Architecture](./assets/architecture.png)
-```
+
 
 ## Lambda Code
 ```
@@ -70,6 +70,6 @@ def lambda_handler(event, context):
 
 ## API Gateway Result
 Add image:
-```
+
 ![API Result](./assets/result.png)
-```
+
